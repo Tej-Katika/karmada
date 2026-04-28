@@ -277,6 +277,9 @@ func (s *Scheduler) addCluster(obj any) {
 	if s.enableSchedulerEstimator {
 		s.schedulerEstimatorWorker.Add(cluster.Name)
 	}
+	if s.priorityQueue != nil {
+		s.priorityQueue.MoveAllToActive()
+	}
 }
 
 func (s *Scheduler) updateCluster(oldObj, newObj any) {
@@ -306,6 +309,15 @@ func (s *Scheduler) updateCluster(oldObj, newObj any) {
 		// to the worker. Therefore, call Add func instead of Enqueue func.
 		s.clusterReconcileWorker.Add(oldCluster)
 		s.clusterReconcileWorker.Add(newCluster)
+	case !equality.Semantic.DeepEqual(oldCluster.Status.Conditions, newCluster.Status.Conditions) ||
+		!equality.Semantic.DeepEqual(oldCluster.Status.APIEnablements, newCluster.Status.APIEnablements):
+		if s.priorityQueue != nil {
+			s.priorityQueue.MoveAllToActive()
+		}
+	case !equality.Semantic.DeepEqual(oldCluster.Status.ResourceSummary, newCluster.Status.ResourceSummary):
+		if s.priorityQueue != nil {
+			s.priorityQueue.MoveAllToActive()
+		}
 	}
 }
 
