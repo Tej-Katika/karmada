@@ -161,3 +161,45 @@ const (
 	// EventReasonAPIIncompatible indicates that the MultiClusterService may not function properly as some member clusters do not support EndpointSlice.
 	EventReasonAPIIncompatible = "APIIncompatible"
 )
+
+// Define events for CronFederatedHPA.
+//
+// Reason and action are distinct: reason describes the specific outcome of an
+// operation (e.g. "ScaleFailed"), while action describes the operation itself
+// independent of outcome (e.g. "ScaleCronFederatedHPA"). A single action may
+// be paired with multiple reasons over time as success and additional failure
+// modes are surfaced; reusing one action constant across those reasons is the
+// intended pattern, matching upstream Kubernetes (e.g. kube-scheduler emits
+// reason "Scheduled" or "FailedScheduling" with action "Binding").
+//
+// Reason values below are kept byte-identical to the strings previously
+// emitted as inline literals, so any external watcher keyed on these strings
+// continues to match. Action values are introduced by the migration to
+// events.k8s.io/v1, where action is a required machine-readable field.
+const (
+	// EventReasonStartCronFederatedHPARuleFailed indicates that starting the
+	// cron executor for a CronFederatedHPA rule failed.
+	EventReasonStartCronFederatedHPARuleFailed = "StartRuleFailed"
+	// EventReasonUpdateCronFederatedHPAFailed indicates that updating the
+	// CronFederatedHPA object failed.
+	EventReasonUpdateCronFederatedHPAFailed = "UpdateCronFederatedHPAFailed"
+	// EventReasonScaleCronFederatedHPAFailed indicates that scaling the target
+	// referenced by a CronFederatedHPA failed.
+	EventReasonScaleCronFederatedHPAFailed = "ScaleFailed"
+	// EventReasonUpdateCronFederatedHPAStatusFailed indicates that updating the
+	// CronFederatedHPA status with execution history failed.
+	EventReasonUpdateCronFederatedHPAStatusFailed = "UpdateStatusFailed"
+
+	// EventActionStartCronFederatedHPARule is the action of starting the cron
+	// executor for a CronFederatedHPA rule.
+	EventActionStartCronFederatedHPARule = "StartCronFederatedHPARule"
+	// EventActionUpdateCronFederatedHPA is the action of updating a
+	// CronFederatedHPA object.
+	EventActionUpdateCronFederatedHPA = "UpdateCronFederatedHPA"
+	// EventActionScaleCronFederatedHPA is the action of scaling the target
+	// referenced by a CronFederatedHPA.
+	EventActionScaleCronFederatedHPA = "ScaleCronFederatedHPA"
+	// EventActionUpdateCronFederatedHPAStatus is the action of updating a
+	// CronFederatedHPA's status with execution history.
+	EventActionUpdateCronFederatedHPAStatus = "UpdateCronFederatedHPAStatus"
+)
