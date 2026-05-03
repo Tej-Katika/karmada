@@ -31,6 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	autoscalingv1alpha1 "github.com/karmada-io/karmada/pkg/apis/autoscaling/v1alpha1"
 	"github.com/karmada-io/karmada/pkg/events"
@@ -43,6 +44,9 @@ const (
 	// ControllerName is the controller name that will be used when reporting events and metrics.
 	ControllerName = "cronfederatedhpa-controller"
 )
+
+// Check if our CronFHPAController implements necessary interface
+var _ reconcile.Reconciler = &CronFHPAController{}
 
 // CronFHPAController is used to operate CronFederatedHPA.
 type CronFHPAController struct {
@@ -140,14 +144,14 @@ func (c *CronFHPAController) processCronRule(ctx context.Context, cronFHPA *auto
 
 	if !helper.IsCronFederatedHPARuleSuspend(rule) {
 		if err := c.CronHandler.CreateCronJobForExecutor(cronFHPA, rule); err != nil {
-			c.EventRecorder.Eventf(cronFHPA, nil, corev1.EventTypeWarning, events.EventReasonStartCronFederatedHPARuleFailed, events.EventActionStartCronFederatedHPARule, err.Error())
+			c.EventRecorder.Eventf(cronFHPA, nil, corev1.EventTypeWarning, events.EventReasonStartCronFederatedHPARuleFailed, events.EventActionStartCronFederatedHPARule, "%v", err)
 			klog.ErrorS(err, "Fail to start cron for CronFederatedHPA rule", "cronFederatedHPA", cronFHPAKey, "rule", rule.Name)
 			return err
 		}
 	}
 
 	if err := c.updateRuleHistory(ctx, cronFHPA, rule); err != nil {
-		c.EventRecorder.Eventf(cronFHPA, nil, corev1.EventTypeWarning, events.EventReasonUpdateCronFederatedHPAFailed, events.EventActionUpdateCronFederatedHPA, err.Error())
+		c.EventRecorder.Eventf(cronFHPA, nil, corev1.EventTypeWarning, events.EventReasonUpdateCronFederatedHPAFailed, events.EventActionUpdateCronFederatedHPA, "%v", err)
 		return err
 	}
 	return nil
@@ -208,7 +212,7 @@ func (c *CronFHPAController) removeCronFHPAHistory(ctx context.Context, cronFHPA
 		return nil
 	}
 	if err := c.Client.Status().Update(ctx, cronFHPA); err != nil {
-		c.EventRecorder.Eventf(cronFHPA, nil, corev1.EventTypeWarning, events.EventReasonUpdateCronFederatedHPAFailed, events.EventActionUpdateCronFederatedHPA, err.Error())
+		c.EventRecorder.Eventf(cronFHPA, nil, corev1.EventTypeWarning, events.EventReasonUpdateCronFederatedHPAFailed, events.EventActionUpdateCronFederatedHPA, "%v", err)
 		klog.ErrorS(err, "Fail to remove CronFederatedHPA rule history", "namespace", cronFHPA.Namespace, "name", cronFHPA.Name, "rule", ruleName)
 		return err
 	}

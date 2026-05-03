@@ -138,3 +138,25 @@ func TestEventConstantsPreserveWireFormat(t *testing.T) {
 		assert.Equal(t, want, got, "reason string drifted from existing wire format")
 	}
 }
+
+// TestEventfFormatStringSafety guards against the regression where an error
+// message containing format verbs (%v, %s, %d, or even raw % characters from
+// URL-encoded paths) is passed as the 'note' format string to Eventf. The
+// safe pattern is to pass "%v" as the format and the error as an argument,
+// so Sprintf treats the error message as data, not as a format directive.
+func TestEventfFormatStringSafety(t *testing.T) {
+	rec := &capturingRecorder{}
+	cronFHPA := newCronFHPAFixture()
+	// An error whose message contains both real format verbs and a raw % —
+	// the kind that arises from wrapped errors and URL-bearing API failures.
+	hostileErr := errors.New("decoding %d failed at https://api/foo%20bar: %v")
+
+	rec.Eventf(cronFHPA, nil, corev1.EventTypeWarning,
+		events.EventReasonUpdateCronFederatedHPAFailed, events.EventActionUpdateCronFederatedHPA,
+		"%v", hostileErr)
+
+	// With the safe pattern, the error message round-trips verbatim — the
+	// %d, %20, and %v inside the error are treated as literal characters.
+	assert.Equal(t, hostileErr.Error(), rec.note)
+	assert.NotContains(t, rec.note, "MISSING", "Sprintf saw the error as a format string and substituted MISSING placeholders")
+}

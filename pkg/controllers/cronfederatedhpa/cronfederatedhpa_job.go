@@ -67,8 +67,7 @@ func targetReferenceFor(cronFHPA *autoscalingv1alpha1.CronFederatedHPA) *corev1.
 }
 
 // NewCronFederatedHPAJob creates a new CronFederatedHPAJob.
-func NewCronFederatedHPAJob(client client.Client, eventRecorder clientgoevents.EventRecorder, scheduler *gocron.Scheduler,
-	cronFHPA *autoscalingv1alpha1.CronFederatedHPA, rule autoscalingv1alpha1.CronFederatedHPARule) *ScalingJob {
+func NewCronFederatedHPAJob(client client.Client, eventRecorder clientgoevents.EventRecorder, scheduler *gocron.Scheduler, cronFHPA *autoscalingv1alpha1.CronFederatedHPA, rule autoscalingv1alpha1.CronFederatedHPARule) *ScalingJob {
 	return &ScalingJob{
 		client:        client,
 		eventRecorder: eventRecorder,
@@ -119,7 +118,7 @@ func RunCronFederatedHPARule(c *ScalingJob) {
 			err = c.addSuccessExecutionHistory(cronFHPA, c.rule.TargetReplicas, c.rule.TargetMinReplicas, c.rule.TargetMaxReplicas)
 		}
 		if err != nil {
-			c.eventRecorder.Eventf(cronFHPA, nil, corev1.EventTypeWarning, events.EventReasonUpdateCronFederatedHPAStatusFailed, events.EventActionUpdateCronFederatedHPAStatus, err.Error())
+			c.eventRecorder.Eventf(cronFHPA, nil, corev1.EventTypeWarning, events.EventReasonUpdateCronFederatedHPAStatusFailed, events.EventActionUpdateCronFederatedHPAStatus, "%v", err)
 		}
 	}()
 
